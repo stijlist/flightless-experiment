@@ -3,7 +3,8 @@ var vars = {};
 var constraints = {};
 var solveQueued = false;
 var renderQueued = false;
-var changeQueue = [];
+var changeQueue = {};
+var attrTable = {};
 
 function createSolver() {
   var solver = new c.SimplexSolver();
@@ -14,10 +15,12 @@ function createSolver() {
 
 function initWindowVars() {
   var width = "window.width";
-  vars[width] = new c.Variable({name: width, value: window.innerWidth, extra: ["window", "innerWidth"]});
+  vars[width] = new c.Variable({name: width, value: window.innerWidth});
+  attrTable[width] = ["window", "innerWidth"];
 
   var height = "window.height";
-  vars[height] = new c.Variable({name: height, value: window.innerHeight, extra: ["window", "innerHeight"]});
+  vars[height] = new c.Variable({name: height, value: window.innerHeight});
+  attrTable[height] = ["window", "innerHeight"];
   onWindowResize();
 
   window.addEventListener("resize", onWindowResize);
@@ -30,22 +33,25 @@ function onWindowResize() {
 
 function wrapPosition(id) {
   var elem = $(id);
-  elem.css("position", "absolute");
 
   var top = id + ".top";
-  vars[top] = new c.Variable({name: top, value: 0, extra: [id, "top"]});
+  vars[top] = new c.Variable({name: top, value: 0});
+  attrTable[top] = [id, "top"];
 
   var left = id + ".left";
-  vars[left] = new c.Variable({name: left, value: 0, extra: [id, "left"]});
+  vars[left] = new c.Variable({name: left, value: 0});
+  attrTable[left] = [id, "left"];
 
   var box = elem.get(0).getBoundingClientRect();
 
   var width = id + ".width";
-  vars[width] = new c.Variable({name: width, value: 0, extra: [id, "width"]});
+  vars[width] = new c.Variable({name: width, value: 0});
+  attrTable[width] = [id, "width"];
   swapConstraint(width, eq(vars[width], box.width));
 
   var height = id + ".height";
-  vars[height] = new c.Variable({name: height, value: 0, extra: [id, "height"]});
+  vars[height] = new c.Variable({name: height, value: 0});
+  attrTable[height] = [id, "height"];
   swapConstraint(height, eq(vars[height], box.height));
 }
 
@@ -88,36 +94,33 @@ var strongStay =   function(v, w) { return stay(v, strong,   w||0); };
 var requiredStay = function(v, w) { return stay(v, required, w||0); };
 
 function runSolver(s) {
-  //console.log("running solver");
+  console.log("running solver");
   s.resolve();
   solveQueued = false;
 }
 
 
 function renderChangeQueue() {
-  //console.log("rendering");
-  var len = changeQueue.length;
-  var name, value;
-  for(var i = 0; i < len; i = i + 2) {
-    name = changeQueue[i];
-    value = changeQueue[i + 1];
-    extra = vars[name].extra;
-    attrs = {};
-    attrs[extra[1]] = value;
-    $(extra[0]).css(attrs);
+  console.log("rendering");
+  var name, value, extra;
+  for(name in changeQueue) { 
+    if (changeQueue.hasOwnProperty(name)) {
+      value = changeQueue[name];
+      extra = attrTable[name];
+      attrs = {};
+      attrs[extra[1]] = value;
+      $(extra[0]).css(attrs);
+    }
   }
-  changeQueue = [];
+  changeQueue = {};
   renderQueued = false;
 }
 
 function onSolve(changes) {
-  //console.log(changes);
-  if(changes.length !== 0) {
-    Array.prototype.push.apply(changeQueue, changes);
-    if(!renderQueued) {
-      requestAnimationFrame(renderChangeQueue);
-      renderQueued = true;
-    }
+  changeQueue = changes;
+  if(!renderQueued) {
+    requestAnimationFrame(renderChangeQueue);
+    renderQueued = true;
   }
 }
 
@@ -173,27 +176,27 @@ function testBelow() {
 }
 
 createItems();
-//testBelow();
+testBelow();
 
-// wrapPosition(".project-selection");
-// swapConstraint(".project-selection.left", eq(vars[".project-selection.left"], 300));
-// swapConstraint(".project-selection.top", eq(vars[".project-selection.top"], 100));
-// swapConstraint(".project-selection.left", centerX("window", ".project-selection"));
+//  wrapPosition(".project-selection");
+//  swapConstraint(".project-selection.left", eq(vars[".project-selection.left"], 300));
+//  swapConstraint(".project-selection.top", eq(vars[".project-selection.top"], 100));
+//  swapConstraint(".project-selection.left", centerX("window", ".project-selection"));
 
 
-// var cur = 0;
-// var t = setInterval(function() {
-//   cur = cur + 1;
-//   height = (Math.sin(cur / 10) + 1) * 100;
-//   swapConstraint(".project-selection.top", eq(vars[".project-selection.top"], height));
-// }, 16);
-// clearTimeout(t);
+//  var cur = 0;
+//  var t = setInterval(function() {
+//    cur = cur + 1;
+//    height = (Math.sin(cur / 10) + 1) * 100;
+//    swapConstraint(".project-selection.top", eq(vars[".project-selection.top"], height));
+//  }, 16);
+//  clearTimeout(t);
 
-// removeConstraint(".project-selection.left");
+//  removeConstraint(".project-selection.left");
 
-// swapConstraint(".project-selection.left", eq(vars[".project-selection.left"], vars[".project-selection.top"]));
+//  swapConstraint(".project-selection.left", eq(vars[".project-selection.left"], vars[".project-selection.top"]));
 
-//margin constraints
-//padding constraints
-//inside constraints
-//width/height constraints
+// margin constraints
+// padding constraints
+// inside constraints
+// width/height constraints
