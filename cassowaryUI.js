@@ -1,4 +1,5 @@
 var c = window.c;
+// c.trace = true; c.debug = true;
 var vars = {};
 var constraints = {};
 var solveQueued = false;
@@ -94,14 +95,17 @@ var strongStay =   function(v, w) { return stay(v, strong,   w||0); };
 var requiredStay = function(v, w) { return stay(v, required, w||0); };
 
 function runSolver(s) {
-  console.log("running solver");
+  // console.log("running solver");
+  // console.time("solve: ");
   s.resolve();
   solveQueued = false;
+  // console.timeEnd("solve: ");
 }
 
 
 function renderChangeQueue() {
-  console.log("rendering");
+  // console.log("rendering");
+  // console.time("render: ");
   var name, value, extra;
   for(name in changeQueue) { 
     if (changeQueue.hasOwnProperty(name)) {
@@ -114,6 +118,7 @@ function renderChangeQueue() {
   }
   changeQueue = {};
   renderQueued = false;
+  // console.timeEnd("render: ");
 }
 
 function onSolve(changes) {
@@ -145,23 +150,28 @@ function below(parent, child, margin) {
 var solver = createSolver();
 initWindowVars();
 
-var numItems = 500;
+var numItems = 30;
 
 function createItems() {
-  console.time("create: " + numItems);
+  // console.time("create: " + numItems);
   var frag = document.createDocumentFragment();
   for(var i = 0; i < numItems; i++) {
     var el = document.createElement("div");
     el.style.background = "red";
     el.style.width = "10px";
     el.style.height = "10px";
+    if (i === 1) {
+      el.style.background = "blue";
+      el.style.width = "30px";
+    }
+
     el.id = "foo" + i;
     el.style.position = "absolute";
     frag.appendChild(el);
   }
 
   document.body.appendChild(frag);
-  console.timeEnd("create: " + numItems);
+  // console.timeEnd("create: " + numItems);
 }
 
 function testBelow() {
@@ -177,6 +187,15 @@ function testBelow() {
 
 createItems();
 testBelow();
+
+var anim = function(i) {
+    var x = new c.Expression(i, null, null);
+    swapConstraint("#foo1" + ".centerx", eq(vars["#foo1.left"], x, strong, 0));
+    if(i < 800) {
+        window.setTimeout(anim, 20 / 1000, i + 1);
+    }
+};
+anim(0);
 
 //  wrapPosition(".project-selection");
 //  swapConstraint(".project-selection.left", eq(vars[".project-selection.left"], 300));
