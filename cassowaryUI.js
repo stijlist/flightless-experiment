@@ -150,7 +150,7 @@ function below(parent, child, margin) {
 var solver = createSolver();
 initWindowVars();
 
-var numItems = 30;
+var numItems = 500;
 
 function createItems() {
   // console.time("create: " + numItems);
@@ -187,15 +187,6 @@ function testBelow() {
 
 createItems();
 testBelow();
-
-var anim = function(i) {
-    var x = new c.Expression(i, null, null);
-    swapConstraint("#foo1" + ".centerx", eq(vars["#foo1.left"], x, strong, 0));
-    if(i < 800) {
-        window.setTimeout(anim, 20 / 1000, i + 1);
-    }
-};
-anim(0);
 
 //  wrapPosition(".project-selection");
 //  swapConstraint(".project-selection.left", eq(vars[".project-selection.left"], 300));
